@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V/F-Sätze Üben</title>
+    <style>
+        body {
+            font-size: 1.5em; /* Schriftgröße halbiert */
+        }
+        .button-row {
+            display: flex;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .correct {
+            background-color: green;
+            color: white;
+        }
+        .incorrect {
+            background-color: red;
+            color: white;
+        }
+        .word-container {
+            display: inline-block;
+            margin: 0 15px;
+        }
+        button {
+            padding: 10px; /* Button-Größe halbiert */
+            font-size: 0.5em; /* Schriftgröße der Buttons halbiert */
+        }
+        #nextButton:disabled {
+            background-color: grey;
+            color: white;
+        }
+        #progressBar {
+            width: 66.67%; /* Breite auf 2/3 der Bildschirmbreite reduziert */
+            background-color: #f3f3f3;
+            border: 1px solid #ccc;
+            margin-top: 30px;
+        }
+        #progress {
+            height: 60px;
+            background-color: green;
+            width: 0%;
+        }
+    </style>
+</head>
+<body>
+    <h1>V/F-Sätze Üben</h1>
+    <p id="sentence"></p>
+    <button id="nextButton" onclick="nextSentence()" disabled>Weiter</button>
+    <div id="progressBar">
+        <div id="progress"></div>
+    </div>
+    <p>Erfolgsquote: <span id="successRate">0%</span></p>
+    <p>Version: 1.0</p>
+    <p>Erstellungszeit: <span id="creationTime"></span></p>
+
+    <script>
+        const sentences = [
+            "Das Verfahren war einfach, und wir hatten keine Verwirrung.",
+            "Die Verantwortung für die Tiere im Zoo ist eine große Freude.",
+            "Die Verbindung zwischen den Spielzeugen war so stark, dass sie nicht fielen.",
+            "Die Veränderung der Farbe des Himmels war fabelhaft.",
+            "Die Spielsachen stehen zur Verfügung, damit jedes Kind Freude hat.",
+            "Die Vergangenheit unserer Vorfahren ist wie ein spannendes Märchen.",
+            "Sein Verhalten war so freundlich, dass alle ihn mochten.",
+            "Das Verhältnis zwischen Katze und Maus ist oft ein lustiges Verfolgen.",
+            "Der Verkehr auf der Straße ist wie ein Fluss von Fahrzeugen.",
+            "Der Verlag hat ein Buch über Tiere und ihre Verwandlung gemacht.",
+            "Der Verlust des Lieblingsspielzeugs machte ihn sehr verärgert.",
+            "Sein Vermögen an Spielsachen war eine ganze Fülle.",
+            "Meine Vermutung ist, dass der Vogel das Lied singt.",
+            "Die Vernunft sagt uns, dass wir beim Spielen vorsichtig sein müssen.",
+            "Die Versammlung der Kinder war eine große Feier.",
+            "Die Versicherung hilft, wenn das Spielzeug kaputt geht und wir es verlieren.",
+            "Er gab mir ein Versprechen, dass er mir sein Spielzeug verleiht.",
+            "Ich habe großes Verständnis, wenn du traurig bist, weil du dein Spielzeug nicht finden kannst.",
+            "Der Vertrag mit meinem Freund ist, dass wir uns die Spielsachen teilen.",
+            "Vertrauen ist wichtig, wenn man zusammen spielt und sich Sachen verleiht.",
+            "Die Verwendung von Farben macht das Bild farbenfroh.",
+            "Die Verwandlung der Raupe zum Schmetterling ist eine Faszination.",
+            "Das Verzeichnis der Spielsachen hilft, sie schnell zu finden.",
+            "Unsere Vorfahren haben uns Geschichten aus der Vergangenheit erzählt.",
+            "Der Vorfall mit dem kaputten Spielzeug war ein kleiner Fehler.",
+            "Mein Vorhaben ist, ein großes Schloss aus Bauklötzen zu bauen.",
+            "Die Vorlage für das Bild war eine farbenfrohe Blume.",
+            "Am Vormittag spielen wir oft im Feld.",
+            "Mein Vorname ist Max, und ich spiele gerne mit der Flotte an Spielzeugautos.",
+            "Wir haben einen großen Vorrat an Süßigkeiten für die Feier.",
+            "Mein Vorschlag ist, dass wir ein Fest veranstalten.",
+            "Die Vorstellung vom Zauberer war sehr fesselnd.",
+            "Der Fortschritt beim Bauen des Turms war fantastisch.",
+            "Die Fortsetzung der Geschichte war noch spannender.",
+            "Die Forschung nach Dinosauriern ist eine große Faszination.",
+            "Die Funktion des Spielzeugs ist es, bunte Funken zu sprühen.",
+            "Seine Fähigkeit zu fahren ist sehr gut.",
+            "Das Fahrzeug fuhr über das Feld.",
+            "Meine Familie ist sehr freundlich.",
+            "Die Farbe des Himmels war farbenfroh.",
+            "Die Fassung des Buches war sehr feinfühlig.",
+            "Ein kleiner Fehler kann große Verwirrung verursachen.",
+            "Die Feier war sehr fröhlich.",
+            "Das Fenster zeigte eine schöne Färbung des Himmels.",
+            "In den Ferien schauen wir gerne Fernsehen.",
+            "Die Feststellung des Arztes war, dass sein Finger verletzt war.",
+            "Die Feuerwehr löschte die Flamme.",
+            "Die Figur im Buch war sehr furchtlos.",
+            "Die Firma stellt viele Flaschen her.",
+            "Die Fläche des Sees war wie ein großes Feld.",
+            "Wir fahren mit dem Boot auf dem Fluss.",
+            "Die Blätter fallen von den Bäumen und bilden eine Fülle von Farben.",
+            "Wir können den Ball fangen, wenn er nicht in den Fluss fällt."
+        ];
+        let currentSentenceIndex = 0;
+        let correctAnswers = 0;
+        let totalAttempts = 0;
+        let totalWords = 0;
+        let correctWords = 0;
+        let shuffledSentences = sentences.sort(() => Math.random() - 0.5); // Sätze zufällig mischen
+
+        function displaySentence() {
+            const sentence = shuffledSentences[currentSentenceIndex];
+            const words = sentence.split(' ');
+            totalWords = words.filter(word => /[vVfF]/.test(word)).length;
+            correctWords = 0;
+            const sentenceContainer = document.getElementById('sentence');
+            sentenceContainer.innerHTML = '';
+
+            words.forEach(word => {
+                const wordContainer = document.createElement('span');
+                wordContainer.classList.add('word-container');
+                if (/[vVfF]/.test(word)) {
+                    const replacedWord = word.replace(/([vVfF])/, '_'); // Nur ein Vorkommen ersetzen
+                    wordContainer.innerHTML = replacedWord + ' ';
+                    const buttonRow = document.createElement('div');
+                    buttonRow.classList.add('button-row');
+                    ['v', 'V', 'f', 'F'].forEach(letter => {
+                        const button = document.createElement('button');
+                        button.innerText = letter;
+                        button.onclick = () => checkAnswer(word, letter, button);
+                        buttonRow.appendChild(button);
+                    });
+                    wordContainer.appendChild(buttonRow);
+                } else {
+                    wordContainer.innerText = word + ' ';
+                }
+                sentenceContainer.appendChild(wordContainer);
+            });
+        }
+
+        function checkAnswer(word, answer, button) {
+            totalAttempts++;
+            if (word.includes(answer)) {
+                correctAnswers++;
+                correctWords++;
+                button.classList.add('correct');
+                button.disabled = true;
+            } else {
+                button.classList.add('incorrect');
+            }
+            updateProgressBar();
+            checkAllWordsAnswered();
+            updateSuccessRate();
+        }
+
+        function updateProgressBar() {
+            const progress = (correctWords / totalWords) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+        }
+
+        function checkAllWordsAnswered() {
+            if (correctWords === totalWords) {
+                document.getElementById('nextButton').disabled = false;
+            }
+        }
+
+        function nextSentence() {
+            currentSentenceIndex++;
+            if (currentSentenceIndex < shuffledSentences.length) {
+                displaySentence();
+                document.getElementById('nextButton').disabled = true;
+                document.getElementById('progress').style.width = '0%';
+            } else {
+                alert('Alle Sätze wurden abgefragt!');
+            }
+        }
+
+        function updateSuccessRate() {
+            const successRate = (correctAnswers / totalAttempts) * 100;
+            document.getElementById('successRate').innerText = successRate.toFixed(2) + '%';
+        }
+
+        function displayCreationTime() {
+            const now = new Date();
+            document.getElementById('creationTime').innerText = now.toLocaleString();
+        }
+
+        displaySentence();
+        displayCreationTime();
+    </script>
+</body>
+</html>
